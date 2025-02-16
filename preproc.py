@@ -11,7 +11,7 @@ import torch
 import torchaudio
 import matplotlib.pyplot as plt
 
-def audio_loader(path: str) -> tuple[list[str], list[str]]:
+def audio_loader(path: str):
     """
         Load audio file (.wav) and transcripts (.txt)
     """
@@ -34,8 +34,10 @@ def generate_alignments(path: str, audios: list[str], transcripts: list[str]) ->
         charsiu = charsiu_attention_aligner('charsiu/en_w2v2_fs_10ms')
         for voice, transcript in zip(audios, transcripts):
             script = open(path + transcript).read()
-            alignment = charsiu.align(path + voice, script)
-            charsiu.serve(audio=path + voice, text=script, save_to=path + voice.split('.')[0] + '.TextGrid')
+            audio_data, sr = librosa.load(path + voice, sr = 44100)
+            audio_data = librosa.resample(audio_data, orig_sr=sr, target_sr=16000) #only charsiu can handle
+            alignment = charsiu.align(audio_data, script)
+            charsiu.serve(audio=audio_data, text=script, save_to=path + voice.split('.')[0] + '.TextGrid')
             alignments.append(alignment)
     except Exception as e:
         import nltk
@@ -44,8 +46,10 @@ def generate_alignments(path: str, audios: list[str], transcripts: list[str]) ->
         alignments = []
         for voice, transcript in zip(audios, transcripts):
             script = open(path + transcript).read()
-            alignment = charsiu.align(path + voice, script)
-            charsiu.serve(audio=path + voice, text=script, save_to=path + voice.split('.')[0] + '.TextGrid')
+            audio_data, sr = librosa.load(path + voice, sr = 44100)
+            audio_data = librosa.resample(audio_data, orig_sr=sr, target_sr=16000)
+            alignment = charsiu.align(audio_data, script)
+            charsiu.serve(audio=audio_data, text=script, save_to=path + voice.split('.')[0] + '.TextGrid')
             alignments.append(alignment)
     return alignments
 
